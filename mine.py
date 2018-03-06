@@ -19,10 +19,15 @@ def game():
 #ork = {'hp': 10, 'atk': 4, 'armor': 0, 'gold': 10, 'exp':15, 'name':'ork'}
 
 
-def print_warrior(you):
-    print('Warrior statistic')
-    print("HP: {} Attack: {} Armor: {}".format(you['hp'], you['atk'], you['armor']))   
-
+def print_your_stat(you, in_shop = ''):
+    if in_shop == 'in':
+        print('Your figthing stat')
+        print("HP: {} Max HP: {} Attack: {} Armor: {} Gold: {} EXp: {} Level: {}".format(you['hp'], 
+                you['maxhp'], you['atk'], you['armor'], you['gold'], you['exp'], you['level']))
+    else:
+        print('Your full stat')
+        print("HP: {} Attack: {} Armor: {}".format(you['hp'], you['atk'], you['armor']))   
+    
 
 def print_enemy(enemy):
     print('\n''\n')
@@ -33,10 +38,14 @@ def print_enemy(enemy):
 def print_basic_ui(floor, you, enemy = 0):
     os.system('cls')
     print('Floor: ', floor)
-    print_warrior(you)
+    print_your_stat(you)
     if enemy != 0:
         print_enemy(enemy)
 
+def print_shop_ui(you):
+    os.system('cls')
+    print('You arrive in shop')
+    print_your_stat(you, 'in')
 
 def enemy_generator(floor):  
     random_enemy = random.randint(1,10)
@@ -73,45 +82,43 @@ def fight(you, floor):
                 return True
             input('Press "enter" to start your turn')
 
-        
+def attack(attacker, defender, damage_multiplier = 1):
+    damage = attacker['atk'] * damage_multiplier - defender['armor']
+    if damage < 1:
+        damage = 0
+    print('\n''{} lose -{} hp'.format(defender['name'], damage))       
+    defender['hp'] = defender['hp'] -damage
+    print()
+    return defender
+
+
 def your_turn(you, floor, enemy):
     answer = ''
-    attack_helper = ['l', 'm', 'h']
+    attack_helper = ['l', 'm', 'h', 'i']
     print_basic_ui(floor, you, enemy)
     print('\n')
-    print('Light attack: damgage[{}] 100°% chance'.format(you['atk']))
-    print('Medium attack: damgage[{}], 60°% chance'.format(you['atk'] * 2))
-    print('Heavy attack: damgage[{}], 30°% chance'.format(you['atk'] * 3))
     while answer not in attack_helper:
         answer = input('Press "l" to light, "m" to medium and "h" to heavy attack: ')
         if answer not in attack_helper:
             print('{} is not an option'.format(answer))
     if answer == 'l':
-        damage = you['atk'] - enemy['armor']
-        if damage < 1:
-            damage = 0
-        print('\n''{} -{} hp'.format(enemy['name'], damage))       
-        enemy['hp'] = enemy['hp'] -damage
+       enemy = attack(you, enemy)
     elif answer == 'm':
         chance = random.randint(1,10)
         if chance > 0 and chance < 7:
-            damage = you['atk'] * 2 - enemy['armor']
-            if damage < 1:
-                damage = 0
-            print('\n''{} -{} hp'.format(enemy['name'], damage))       
-            enemy['hp'] = enemy['hp'] -damage
+            enemy = attack(you, enemy, 2)
         else:
             print('Miss')    
     elif answer == 'h':
         chance = random.randint(1,10)
         if chance > 0 and chance < 4:
-            damage = you['atk'] * 3 - enemy['armor']
-            if damage < 1:
-                damage = 0
-            print('\n''{} -{} hp'.format(enemy['name'], damage))       
-            enemy['hp'] = enemy['hp'] -damage
+            enemy = attack(you, enemy, 3)
         else:
             print('Miss')
+    elif answer == 'i':
+        print('Light attack: damgage[{}] 100°% chance'.format(you['atk']))
+        print('Medium attack: damgage[{}], 60°% chance'.format(you['atk'] * 2))
+        print('Heavy attack: damgage[{}], 30°% chance'.format(you['atk'] * 3))
     return enemy
 
 
@@ -122,50 +129,60 @@ def enemy_turn(you, enemy):
         if enemy_chance == 4:
             print('{} missed the light attack'.format(enemy['name']))
         else:            
-            damage = enemy['atk'] - you['armor']
-            if damage < 1:
-                damage = 0
-            print('{} hit you with ligth attack you lose [{}]hp'.format(enemy['name'], damage))
-            you['hp'] = you['hp'] - damage
+            print('{} hit you with light attack'.format(enemy['name']))
+            you = attack(enemy, you)
     elif attack_type == 3:
         enemy_chance = random.randint(1,4)
         if enemy_chance == 4 or enemy_chance == 3:
             print('{} missed the medium attack'.format(enemy['name']))
         else:
-            damage = enemy['atk'] * 2 - you['armor']
-            if damage < 1:
-                damage = 0
-            print('{} hit you with medium attack you lose [{}]hp'.format(enemy['name'], damage))
-            you['hp'] = you['hp'] - damage
+            print('{} hit you with medium attack'.format(enemy['name']))
+            you = attack(enemy, you, 2)
     return you
 
 
+def level_up(you):
+    if you['exp'] >= you['level'] *2:
+        answer = 0
+        print('level up')
+        while  answer != '1' and answer != '2':
+            answer = input('Press "1" to increase max hp by 2 or "2" to increase atk by 1: ')
+        if answer == '1':
+            you['maxhp'] = you['maxhp'] + 2
+            you['hp'] = you['hp'] + 2
+            print('Your max hp now {}'.format(you['maxhp']))
+        elif answer == '2':
+            you['atk'] = you['atk'] + 1  
+            print('Your attack now {}'.format(you['atk']))
+        you['level'] = you['level'] + 1
+        input('Press "enter" to countine')
+
 def new_game():
-    warrior = {'hp': 1, 'atk': 2, 'armor': 0, 'gold': 0, 'exp':0 , 'maxhp':15, 'level':1}
+    you = {'name':'You', 'hp': 10, 'atk': 2, 'armor': 0, 'gold': 0, 'exp':0 , 'maxhp':15, 'level':1}
     floor = 1
+    cleared_room_counter = 0
     gameover = False
     while gameover == False:
-        print_basic_ui(floor, warrior)
-        if warrior['exp'] >= warrior['level'] *2:
-            answer = 0
-            print('level up')
-            while  answer != '1' and answer != '2':
-                answer = input('Press "1" to increase max hp by 2 or "2" to increase atk by 1: ')
-            if answer == '1':
-                warrior['maxhp'] = warrior['maxhp'] + 2
-                warrior['hp'] = warrior['hp'] + 2
-                print('Your max hp now {}'.format(warrior['maxhp']))
-            elif answer == '2':
-                warrior['atk'] = warrior['atk'] + 1  
-                print('Your attack now {}'.format(warrior['atk']))
-            input('Press "enter" to countine')
-        input('\n''\n''Press "enter" to kick the door') 
-        gameover = fight(warrior, floor)
+        print_basic_ui(floor, you)
+        level_up(you)
+        while True:
+            print_basic_ui(floor, you)
+            answer = input('\n''Press "enter" to kick the door or "i" to attack info: ') 
+            if answer == 'i':
+                print('\n''Light attack: damgage[{}] 100°% chance'.format(you['atk']))
+                print('Medium attack: damgage[{}], 60°% chance'.format(you['atk'] * 2))
+                print('Heavy attack: damgage[{}], 30°% chance'.format(you['atk'] * 3))
+            else:
+                break
+        gameover = fight(you, floor)
         if gameover == True:
             input()
             os.system('cls') 
             print(' You Die ')
         else:
             input('\n''Press "enter" to countine or "s" to save')
-
+        cleared_room_counter = cleared_room_counter + 1
+        if cleared_room_counter == 5:
+             print_shop_ui(you)
+             input()
 game()
