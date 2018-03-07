@@ -3,7 +3,7 @@ import os
 import sys
 
 
-def game():
+def game_start():
     answer = ''
     print('Welcome back hero''\n''Press "n" to start e new adtventure or "l" to load game')
     while answer != 'n' and answer != 'l':
@@ -20,32 +20,41 @@ def game():
 
 
 def print_your_stat(you, in_shop = ''):
-    if in_shop == 'in':
-        print('Your figthing stat')
+    if in_shop == 'full':
+        print('Your full stat')
         print("HP: {} Max HP: {} Attack: {} Armor: {} Gold: {} EXp: {} Level: {}".format(you['hp'], 
                 you['maxhp'], you['atk'], you['armor'], you['gold'], you['exp'], you['level']))
     else:
-        print('Your full stat')
+        print('Your figthing stat')
         print("HP: {} Attack: {} Armor: {}".format(you['hp'], you['atk'], you['armor']))   
     
 
 def print_enemy(enemy):
-    print('\n''\n')
+    print('\n')
     print('{}'.format(enemy['name']))
     print("HP: {} Attack: {} Armor: {}".format(enemy['hp'], enemy['atk'], enemy['armor']))
 
 
-def print_basic_ui(floor, you, enemy = 0):
+def print_basic_ui(floor, you, cleared_room, enemy = 0):
     os.system('cls')
-    print('Floor: ', floor)
+    print('Floor: {} Cleared room: {}'.format(floor,cleared_room))
     print_your_stat(you)
     if enemy != 0:
         print_enemy(enemy)
 
+
 def print_shop_ui(you):
     os.system('cls')
     print('You arrive in shop')
-    print_your_stat(you, 'in')
+    print_your_stat(you, 'full')
+
+
+def print_shop_item(items):
+    ''' items is  a dictionary in a dictionary '''
+    for item_name,item_stat in items.items():
+        print('\n', item_name)
+        print(' +{} {} Price: {} gold'.format(item_stat['bonus'], item_stat['bonustype'], item_stat['price']))
+        
 
 def enemy_generator(floor):  
     random_enemy = random.randint(1,10)
@@ -62,25 +71,24 @@ def enemy_generator(floor):
     return enemy
 
 
-def fight(you, floor):
+def fight(you, floor, cleared_room):
     enemy = enemy_generator(floor)
     while True:
-        enemy = your_turn(you, floor, enemy)
-        print('')
+        enemy = your_turn(you, floor, enemy, cleared_room)
         if enemy['hp'] < 1:
             print('You killed the {}'.format(enemy['name']))
             you['gold'] = you['gold'] + enemy['gold']
             you['exp'] = you['exp'] + enemy['exp']
             print('You get {} gold and {} exp'.format(enemy['gold'], enemy['exp']))
-            print('\n''You have {} gold and {} exp'.format(you['gold'], you['exp']))
             return False
         else:
             input('End your turn')
-            print_basic_ui(floor, you, enemy)
+            print_basic_ui(floor, you,  cleared_room, enemy)
             you = enemy_turn(you, enemy)
             if you['hp'] < 1:
                 return True
             input('Press "enter" to start your turn')
+
 
 def attack(attacker, defender, damage_multiplier = 1):
     damage = attacker['atk'] * damage_multiplier - defender['armor']
@@ -92,33 +100,33 @@ def attack(attacker, defender, damage_multiplier = 1):
     return defender
 
 
-def your_turn(you, floor, enemy):
+def your_turn(you, floor, enemy,  cleared_room):
     answer = ''
-    attack_helper = ['l', 'm', 'h', 'i']
-    print_basic_ui(floor, you, enemy)
+    attack_helper = ['l', 'm', 'h']
+    print_basic_ui(floor, you,  cleared_room, enemy)
     print('\n')
     while answer not in attack_helper:
         answer = input('Press "l" to light, "m" to medium and "h" to heavy attack: ')
         if answer not in attack_helper:
             print('{} is not an option'.format(answer))
+    print_basic_ui(floor, you,  cleared_room, enemy)
     if answer == 'l':
-       enemy = attack(you, enemy)
+        print('\n''You hit the {} with light attack'.format(enemy['name']))
+        enemy = attack(you, enemy)
     elif answer == 'm':
         chance = random.randint(1,10)
         if chance > 0 and chance < 7:
+            print('\n''You hit the {} with medium attack'.format(enemy['name']))
             enemy = attack(you, enemy, 2)
         else:
             print('Miss')    
     elif answer == 'h':
         chance = random.randint(1,10)
         if chance > 0 and chance < 4:
+            print('\n''You hit the {} with heavy attack'.format(enemy['name']))
             enemy = attack(you, enemy, 3)
         else:
             print('Miss')
-    elif answer == 'i':
-        print('Light attack: damgage[{}] 100°% chance'.format(you['atk']))
-        print('Medium attack: damgage[{}], 60°% chance'.format(you['atk'] * 2))
-        print('Heavy attack: damgage[{}], 30°% chance'.format(you['atk'] * 3))
     return enemy
 
 
@@ -127,9 +135,9 @@ def enemy_turn(you, enemy):
     if attack_type == 1 or attack_type == 2:
         enemy_chance = random.randint(1,4)
         if enemy_chance == 4:
-            print('{} missed the light attack'.format(enemy['name']))
+            print('\n''{} missed the light attack'.format(enemy['name']))
         else:            
-            print('{} hit you with light attack'.format(enemy['name']))
+            print('\n''{} hit you with light attack'.format(enemy['name']))
             you = attack(enemy, you)
     elif attack_type == 3:
         enemy_chance = random.randint(1,4)
@@ -142,7 +150,7 @@ def enemy_turn(you, enemy):
 
 
 def level_up(you):
-    if you['exp'] >= you['level'] *2:
+    if you['exp'] >= you['level'] *10:
         answer = 0
         print('level up')
         while  answer != '1' and answer != '2':
@@ -155,34 +163,68 @@ def level_up(you):
             you['atk'] = you['atk'] + 1  
             print('Your attack now {}'.format(you['atk']))
         you['level'] = you['level'] + 1
+        you['exp'] = you['exp'] - you['level'] *10
         input('Press "enter" to countine')
 
+def enter_to_room(floor, you, cleared_room_counter):
+     while True:
+        print_basic_ui(floor, you, cleared_room_counter)
+        answer = input('\n''Press "enter" to kick the door or "i" to info: ') 
+        if answer == 'i':
+            print('')
+            print_your_stat(you, 'full')
+            print('Your attacks:''\n''Light attack: damgage[{}] 100°% chance'.format(you['atk']))
+            print('Medium attack: damgage[{}], 60°% chance'.format(you['atk'] * 2))
+            print('Heavy attack: damgage[{}], 30°% chance'.format(you['atk'] * 3))
+            print('')
+            input('Press "enter" to countiun')
+
+        else:
+            break
+
 def new_game():
-    you = {'name':'You', 'hp': 10, 'atk': 2, 'armor': 0, 'gold': 0, 'exp':0 , 'maxhp':15, 'level':1}
+    you = {'name':'You', 'hp': 10, 'atk': 20, 'armor': 0, 'gold': 0, 'exp': 0 , 'maxhp': 10, 'level':1}
     floor = 1
     cleared_room_counter = 0
     gameover = False
     while gameover == False:
-        print_basic_ui(floor, you)
+        print_basic_ui(floor, you,  cleared_room_counter)
         level_up(you)
-        while True:
-            print_basic_ui(floor, you)
-            answer = input('\n''Press "enter" to kick the door or "i" to attack info: ') 
-            if answer == 'i':
-                print('\n''Light attack: damgage[{}] 100°% chance'.format(you['atk']))
-                print('Medium attack: damgage[{}], 60°% chance'.format(you['atk'] * 2))
-                print('Heavy attack: damgage[{}], 30°% chance'.format(you['atk'] * 3))
-            else:
-                break
-        gameover = fight(you, floor)
+        enter_to_room(floor, you,  cleared_room_counter)
+        gameover = fight(you, floor, cleared_room_counter)
         if gameover == True:
             input()
             os.system('cls') 
             print(' You Die ')
+            input()
+            sys.exit(0)
         else:
             input('\n''Press "enter" to countine or "s" to save')
         cleared_room_counter = cleared_room_counter + 1
         if cleared_room_counter == 5:
-             print_shop_ui(you)
-             input()
-game()
+            shop_items = {'Shield':{'bonustype':'armor', 'bonus':1, 'price':10}, 'THE LEGENDARY SWORD':{'bonustype':'atk', 'bonus':2, 'price':15}}
+            while True:
+                in_shop_ind = False
+                print_shop_ui(you)
+                print_shop_item(shop_items)            
+                chosen = input('Write the item name wich you want to buy or press "x" to countinu: ')
+                if chosen == 'x':
+                    break
+                elif chosen not in you:
+                    for item_name,  item_stat in shop_items.items():
+                        if item_name == chosen:
+                            if item_stat['price'] <= you['gold']:
+                                you[item_name] = item_name
+                                you[item_stat['bonustype']] = you[item_stat['bonustype']] + item_stat['bonus']
+                                you['gold'] = you['gold'] - item_stat['price']
+                                in_shop_ind = True
+                                break
+                            else:
+                                input('You dont have enougth gold ')
+                    if in_shop_ind == False:    
+                        input('{} is not in shop'.format(chosen))
+                    else:
+                        shop_items.pop(item_name, None)
+                else:
+                    input('{} is already in your inventory'.format(chosen))
+game_start()
