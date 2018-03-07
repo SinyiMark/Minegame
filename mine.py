@@ -13,14 +13,14 @@ def game_start():
     elif answer == 'l':
         pass
 
-#slime = {'hp': 4, 'atk': 1, 'armor': 0, 'gold': 1, 'exp':2, 'name':'slime'}  
-#goblin = {'hp': 5, 'atk': 2, 'armor': 1, 'gold': 3, 'exp':5, 'name':'goblin'}
-#skeleton = {'hp': 5, 'atk': 3, 'armor': 0, 'gold': 3, 'exp':5, 'name':'skeleton'}
-#ork = {'hp': 10, 'atk': 4, 'armor': 0, 'gold': 10, 'exp':15, 'name':'ork'}
 
+def print_your_stat(you, stat = ''):
+    '''
+        'you' is your hero dictonary
+        if 'stat' is equal 'full' the fun will print the hero's full stat
+    '''
 
-def print_your_stat(you, in_shop = ''):
-    if in_shop == 'full':
+    if stat == 'full':
         print('Your full stat')
         print("HP: {} Max HP: {} Attack: {} Armor: {} Gold: {} EXp: {} Level: {}".format(you['hp'], 
                 you['maxhp'], you['atk'], you['armor'], you['gold'], you['exp'], you['level']))
@@ -62,13 +62,37 @@ def enemy_generator(floor):
         slime_count = [1, 2, 3, 4]
         goblin_count = [5, 6, 7]
         skeleton_count = [8, 9, 10]
-        if random_enemy  in slime_count:
-            enemy = {'hp': 3, 'atk': 1, 'armor': 0, 'gold': 1, 'exp':2, 'name':'slime'} 
-        elif random_enemy  in goblin_count:
-            enemy = {'hp': 4, 'atk': 2, 'armor': 1, 'gold': 3, 'exp':5, 'name':'goblin'} 
-        elif random_enemy  in skeleton_count:
-            enemy = {'hp': 6, 'atk': 2, 'armor': 0, 'gold': 3, 'exp':5, 'name':'skeleton'}
+        if random_enemy in slime_count:
+            enemy = enemy_stat_generator('slime') 
+        elif random_enemy in goblin_count:
+            enemy = enemy_stat_generator('goblin') 
+        elif random_enemy in skeleton_count:
+             enemy = enemy_stat_generator('skeleton')
+    elif floor == 2:
+        slime_count = [1, 2,]
+        goblin_count = [5, 6, 7]
+        skeleton_count = [8, 9, 10]
+        ork_count =[3, 4]
+        if random_enemy in slime_count:
+                enemy = enemy_stat_generator('slime') 
+        elif random_enemy in goblin_count:
+            enemy = enemy_stat_generator('goblin') 
+        elif random_enemy in skeleton_count:
+            enemy = enemy_stat_generator('skeleton')
+        elif random_enemy in ork_count:
+            enemy = enemy_stat_generator('ork')
     return enemy
+
+
+def enemy_stat_generator(enemy_name):
+    if enemy_name == 'slime':
+        return {'hp': 3, 'atk': 1, 'armor': 0, 'gold': 1, 'exp':2, 'name':'slime'}
+    elif enemy_name == 'goblin':
+        return {'hp': 4, 'atk': 2, 'armor': 1, 'gold': 3, 'exp':5, 'name':'goblin'} 
+    elif enemy_name == 'skeleton':
+        return {'hp': 6, 'atk': 2, 'armor': 0, 'gold': 3, 'exp':5, 'name':'skeleton'}
+    elif enemy_name == 'ork':
+        return {'hp': 10, 'atk': 4, 'armor': 0, 'gold': 10, 'exp':15, 'name':'ork'}
 
 
 def fight(you, floor, cleared_room):
@@ -166,6 +190,7 @@ def level_up(you):
         you['exp'] = you['exp'] - you['level'] *10
         input('Press "enter" to countine')
 
+
 def enter_to_room(floor, you, cleared_room_counter):
      while True:
         print_basic_ui(floor, you, cleared_room_counter)
@@ -181,6 +206,34 @@ def enter_to_room(floor, you, cleared_room_counter):
 
         else:
             break
+
+
+def in_the_shop(you):
+    shop_items = {'Shield':{'bonustype':'armor', 'bonus':1, 'price':10}, 'THE LEGENDARY SWORD':{'bonustype':'atk', 'bonus':2, 'price':15}}
+    while True:
+        in_shop_ind = False
+        print_shop_ui(you)
+        print_shop_item(shop_items)            
+        chosen = input('\n' 'Write the item name wich you want to buy or press "x" to countinu: ')
+        if chosen == 'x':
+            break
+        elif chosen not in you:
+            for item_name,  item_stat in shop_items.items():
+                if item_name == chosen:
+                    if item_stat['price'] <= you['gold']:
+                        you[item_name] = item_name
+                        you[item_stat['bonustype']] = you[item_stat['bonustype']] + item_stat['bonus']
+                        you['gold'] = you['gold'] - item_stat['price']
+                        in_shop_ind = True
+                        break
+                    else:
+                        input('You dont have enougth gold ')
+            if in_shop_ind == False:    
+                input('{} is not in shop'.format(chosen))
+            else:
+                shop_items.pop(item_name, None)
+        else:
+            input('{} is already in your inventory'.format(chosen))
 
 def new_game():
     you = {'name':'You', 'hp': 10, 'atk': 20, 'armor': 0, 'gold': 0, 'exp': 0 , 'maxhp': 10, 'level':1}
@@ -201,30 +254,11 @@ def new_game():
         else:
             input('\n''Press "enter" to countine or "s" to save')
         cleared_room_counter = cleared_room_counter + 1
-        if cleared_room_counter == 5:
-            shop_items = {'Shield':{'bonustype':'armor', 'bonus':1, 'price':10}, 'THE LEGENDARY SWORD':{'bonustype':'atk', 'bonus':2, 'price':15}}
-            while True:
-                in_shop_ind = False
-                print_shop_ui(you)
-                print_shop_item(shop_items)            
-                chosen = input('Write the item name wich you want to buy or press "x" to countinu: ')
-                if chosen == 'x':
-                    break
-                elif chosen not in you:
-                    for item_name,  item_stat in shop_items.items():
-                        if item_name == chosen:
-                            if item_stat['price'] <= you['gold']:
-                                you[item_name] = item_name
-                                you[item_stat['bonustype']] = you[item_stat['bonustype']] + item_stat['bonus']
-                                you['gold'] = you['gold'] - item_stat['price']
-                                in_shop_ind = True
-                                break
-                            else:
-                                input('You dont have enougth gold ')
-                    if in_shop_ind == False:    
-                        input('{} is not in shop'.format(chosen))
-                    else:
-                        shop_items.pop(item_name, None)
-                else:
-                    input('{} is already in your inventory'.format(chosen))
+        if cleared_room_counter % 1 == 0:
+            in_the_shop(you)
+            os.system('cls')
+            print_your_stat(you, 'full')
+            answer = input('If you want to go next floor write "go" : ')
+            if answer == 'go':
+                floor = floor + 1
 game_start()
