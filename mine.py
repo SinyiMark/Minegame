@@ -16,12 +16,12 @@ def game_start():
 
 
 def new_game():
-    you = {'name':'You', 'hp': 12, 'atk': 20, 'armor': 0, 'gold': 20, 'exp': 0 , 'maxhp': 12, 'level':1}
+    you = {'name':'You', 'hp': 12, 'atk': 2, 'armor': 0, 'gold': 0, 'exp': 0 , 'maxhp': 12, 'level':1}
     floor = 1
     cleared_room_counter = 0
     gameover = False
     while gameover == False:
-        print_modul.basic_ui(floor, you,  cleared_room_counter)
+        print_modul.show_basic_ui(floor, you,  cleared_room_counter)
         level_up(you)
         enter_to_room(floor, you,  cleared_room_counter)
         gameover = fight(you, floor, cleared_room_counter)
@@ -37,7 +37,7 @@ def new_game():
         if cleared_room_counter % 3 == 0:
             in_the_shop(you)
             os.system('cls')
-            print_modul.your_stat(you, 'full')
+            print_modul.show_your_stat(you, 'full')
             answer = input('If you want to go next floor write "go" : ')
             if answer == 'go':
                 floor = floor + 1
@@ -101,7 +101,7 @@ def fight(you, floor, cleared_room):
             return False
         else:
             input('End your turn')
-            print_modul.basic_ui(floor, you,  cleared_room, enemy)
+            print_modul.show_basic_ui(floor, you,  cleared_room, enemy)
             you = enemy_turn(you, enemy)
             if you['hp'] < 1:
                 return True
@@ -121,13 +121,13 @@ def attack(attacker, defender, damage_multiplier = 1):
 def your_turn(you, floor, enemy,  cleared_room):
     answer = ''
     attack_helper = ['l', 'm', 'h']
-    print_modul.basic_ui(floor, you,  cleared_room, enemy)
+    print_modul.show_basic_ui(floor, you,  cleared_room, enemy)
     print('\n')
     while answer not in attack_helper:
         answer = input('Press "l" to light, "m" to medium and "h" to heavy attack: ')
         if answer not in attack_helper:
             print('{} is not an option'.format(answer))
-    print_modul.basic_ui(floor, you,  cleared_room, enemy)
+    print_modul.show_basic_ui(floor, you,  cleared_room, enemy)
     if answer == 'l':
         print('\n''You hit the {} with light attack'.format(enemy['name']))
         enemy = attack(you, enemy)
@@ -180,18 +180,18 @@ def level_up(you):
         elif answer == '2':
             you['atk'] = you['atk'] + 1  
             print('Your attack now {}'.format(you['atk']))
-        you['level'] = you['level'] + 1
         you['exp'] = you['exp'] - you['level'] *10
+        you['level'] = you['level'] + 1        
         input('Press "enter" to countine')
 
 
 def enter_to_room(floor, you, cleared_room_counter):
      while True:
-        print_modul.basic_ui(floor, you, cleared_room_counter)
+        print_modul.show_basic_ui(floor, you, cleared_room_counter)
         answer = input('\n''Press "enter" to kick the door or "i" to info: ') 
         if answer == 'i':
             print('')
-            print_modul.your_stat(you, 'full')
+            print_modul.show_your_stat(you, 'full')
             print('Your attacks:''\n''Light attack: damgage[{}] 100°% chance'.format(you['atk']))
             print('Medium attack: damgage[{}], 60°% chance'.format(you['atk'] * 2))
             print('Heavy attack: damgage[{}], 30°% chance'.format(you['atk'] * 3))
@@ -206,8 +206,8 @@ def in_the_shop(you):
     shop_items = get_shop_items()
     while True:
         in_shop_ind = False
-        print_modul.shop_ui(you)
-        shop_items = print_modul.shop_item(shop_items)            
+        print_modul.show_shop_ui(you)
+        shop_items = print_modul.show_shop_item(shop_items)            
         chosen = input('\n' 'Write the item name wich you want to buy or press "x" to countinu: ')
         if chosen == 'x':
             break
@@ -223,7 +223,8 @@ def in_the_shop(you):
                     in_shop_ind = True
                     break
                 elif chosen == item_stat['id'] and item_name in you:
-                    input('{} is already in your inventory'.format(chosen))
+                    input('{} is already in your inventory'.format(item_name))
+                    in_shop_ind = True
                 elif item_stat['id'] == chosen:  
                     if item_stat['price'] <= you['gold']:
                         if item_name != 'Heal potion':                           

@@ -1,7 +1,7 @@
 import os
 
 
-def your_stat(you, stat = ''):
+def show_your_stat(you, stat = ''):
     '''
         'you' is your hero dictonary
         if 'stat' is equal 'full' the fun will print the hero's full stat
@@ -16,27 +16,27 @@ def your_stat(you, stat = ''):
         print("HP: {} Attack: {} Armor: {}".format(you['hp'], you['atk'], you['armor']))   
     
 
-def enemy_stat(enemy):
+def show_enemy_stat(enemy):
     print('\n')
     print('{}'.format(enemy['name']))
     print("HP: {} Attack: {} Armor: {}".format(enemy['hp'], enemy['atk'], enemy['armor']))
 
 
-def basic_ui(floor, you, cleared_room, enemy = 0):
+def show_basic_ui(floor, you, cleared_room, enemy = 0):
     os.system('cls')
     print('Floor: {} Cleared room: {}'.format(floor,cleared_room))
-    your_stat(you)
+    show_your_stat(you)
     if enemy != 0:
-        enemy_stat(enemy)
+        show_enemy_stat(enemy)
 
 
-def shop_ui(you):
+def show_shop_ui(you):
     os.system('cls')
     print('You arrive in shop')
-    your_stat(you, 'full')
+    show_your_stat(you, 'full')
 
 
-def shop_item(shop_items):
+def show_shop_item(shop_items):
     ''' items is  a dictionary in a dictionary '''
     item_id = 0
     for item_name,item_stat in shop_items.items():
