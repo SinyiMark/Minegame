@@ -1,6 +1,7 @@
 import random
 import os
 import sys
+import print_modul
 
 
 def game_start():
@@ -20,7 +21,7 @@ def new_game():
     cleared_room_counter = 0
     gameover = False
     while gameover == False:
-        print_basic_ui(floor, you,  cleared_room_counter)
+        print_modul.basic_ui(floor, you,  cleared_room_counter)
         level_up(you)
         enter_to_room(floor, you,  cleared_room_counter)
         gameover = fight(you, floor, cleared_room_counter)
@@ -36,57 +37,10 @@ def new_game():
         if cleared_room_counter % 3 == 0:
             in_the_shop(you)
             os.system('cls')
-            print_your_stat(you, 'full')
+            print_modul.your_stat(you, 'full')
             answer = input('If you want to go next floor write "go" : ')
             if answer == 'go':
                 floor = floor + 1
-
-
-def print_your_stat(you, stat = ''):
-    '''
-        'you' is your hero dictonary
-        if 'stat' is equal 'full' the fun will print the hero's full stat
-    '''
-
-    if stat == 'full':
-        print('Your full stat')
-        print("HP: {} Max HP: {} Attack: {} Armor: {} Gold: {} EXp: {} Level: {}".format(you['hp'], 
-                you['maxhp'], you['atk'], you['armor'], you['gold'], you['exp'], you['level']))
-    else:
-        print('Your figthing stat')
-        print("HP: {} Attack: {} Armor: {}".format(you['hp'], you['atk'], you['armor']))   
-    
-
-def print_enemy(enemy):
-    print('\n')
-    print('{}'.format(enemy['name']))
-    print("HP: {} Attack: {} Armor: {}".format(enemy['hp'], enemy['atk'], enemy['armor']))
-
-
-def print_basic_ui(floor, you, cleared_room, enemy = 0):
-    os.system('cls')
-    print('Floor: {} Cleared room: {}'.format(floor,cleared_room))
-    print_your_stat(you)
-    if enemy != 0:
-        print_enemy(enemy)
-
-
-def print_shop_ui(you):
-    os.system('cls')
-    print('You arrive in shop')
-    print_your_stat(you, 'full')
-
-
-def print_shop_item(shop_items):
-    ''' items is  a dictionary in a dictionary '''
-    item_id = 0
-    for item_name,item_stat in shop_items.items():
-        item_id = item_id + 1
-        print('\n', 'Id: {} {}'.format(item_id, item_name))
-        print(' +{} {} Price: {} gold'.format(item_stat['bonus'], item_stat['bonustype'], item_stat['price']))
-        item_stat['id'] = item_id
-    return shop_items
-
 
 def enemy_generator(floor):  
     random_enemy = random.randint(1,10)
@@ -96,13 +50,13 @@ def enemy_generator(floor):
         skeleton_count = [8, 9, 10]
         lvl2_goblin = [4]
         if random_enemy in slime_count:
-            enemy = enemy_stat_generator('slime') 
+            enemy = enemy_stat_storage('slime') 
         elif random_enemy in goblin_count:
-            enemy = enemy_stat_generator('goblin') 
+            enemy = enemy_stat_storage('goblin') 
         elif random_enemy in skeleton_count:
-             enemy = enemy_stat_generator('skeleton')
+             enemy = enemy_stat_storage('skeleton')
         elif random_enemy in lvl2_goblin:
-                enemy = enemy_stat_generator('lvl2_goblin')    
+                enemy = enemy_stat_storage('lvl2_goblin')    
     elif floor == 2:
         slime_count = [1, 2,]
         goblin_count = [5, 6]
@@ -110,19 +64,19 @@ def enemy_generator(floor):
         ork_count =[3, 4]
         lvl2_goblin = [7]
         if random_enemy in slime_count:
-                enemy = enemy_stat_generator('slime') 
+                enemy = enemy_stat_storage('slime') 
         elif random_enemy in goblin_count:
-            enemy = enemy_stat_generator('goblin') 
+            enemy = enemy_stat_storage('goblin') 
         elif random_enemy in skeleton_count:
-            enemy = enemy_stat_generator('skeleton')
+            enemy = enemy_stat_storage('skeleton')
         elif random_enemy in ork_count:
-            enemy = enemy_stat_generator('ork')
+            enemy = enemy_stat_storage('ork')
         elif random_enemy in lvl2_goblin:
-            enemy = enemy_stat_generator('lvl2_goblin')    
+            enemy = enemy_stat_storage('lvl2_goblin')    
     return enemy
 
 
-def enemy_stat_generator(enemy_name):
+def enemy_stat_storage(enemy_name):
     if enemy_name == 'slime':
         return {'hp': 3, 'atk': 1, 'armor': 0, 'gold': 2, 'exp':2, 'name':'slime'}
     elif enemy_name == 'goblin':
@@ -132,7 +86,7 @@ def enemy_stat_generator(enemy_name):
     elif enemy_name == 'ork':
         return {'hp': 10, 'atk': 4, 'armor': 0, 'gold': 10, 'exp':15, 'name':'ork'}
     elif enemy_name == 'lvl2_goblin':
-        return {'hp': 5, 'atk': 4, 'armor': 1, 'gold': 6, 'exp':7, 'name':'goblin [lvl 2]'} 
+        return {'hp': 5, 'atk': 3, 'armor': 1, 'gold': 6, 'exp':7, 'name':'goblin [lvl 2]'} 
 
 
 def fight(you, floor, cleared_room):
@@ -147,7 +101,7 @@ def fight(you, floor, cleared_room):
             return False
         else:
             input('End your turn')
-            print_basic_ui(floor, you,  cleared_room, enemy)
+            print_modul.basic_ui(floor, you,  cleared_room, enemy)
             you = enemy_turn(you, enemy)
             if you['hp'] < 1:
                 return True
@@ -167,13 +121,13 @@ def attack(attacker, defender, damage_multiplier = 1):
 def your_turn(you, floor, enemy,  cleared_room):
     answer = ''
     attack_helper = ['l', 'm', 'h']
-    print_basic_ui(floor, you,  cleared_room, enemy)
+    print_modul.basic_ui(floor, you,  cleared_room, enemy)
     print('\n')
     while answer not in attack_helper:
         answer = input('Press "l" to light, "m" to medium and "h" to heavy attack: ')
         if answer not in attack_helper:
             print('{} is not an option'.format(answer))
-    print_basic_ui(floor, you,  cleared_room, enemy)
+    print_modul.basic_ui(floor, you,  cleared_room, enemy)
     if answer == 'l':
         print('\n''You hit the {} with light attack'.format(enemy['name']))
         enemy = attack(you, enemy)
@@ -233,11 +187,11 @@ def level_up(you):
 
 def enter_to_room(floor, you, cleared_room_counter):
      while True:
-        print_basic_ui(floor, you, cleared_room_counter)
+        print_modul.basic_ui(floor, you, cleared_room_counter)
         answer = input('\n''Press "enter" to kick the door or "i" to info: ') 
         if answer == 'i':
             print('')
-            print_your_stat(you, 'full')
+            print_modul.your_stat(you, 'full')
             print('Your attacks:''\n''Light attack: damgage[{}] 100°% chance'.format(you['atk']))
             print('Medium attack: damgage[{}], 60°% chance'.format(you['atk'] * 2))
             print('Heavy attack: damgage[{}], 30°% chance'.format(you['atk'] * 3))
@@ -252,8 +206,8 @@ def in_the_shop(you):
     shop_items = get_shop_items()
     while True:
         in_shop_ind = False
-        print_shop_ui(you)
-        shop_items = print_shop_item(shop_items)            
+        print_modul.shop_ui(you)
+        shop_items = print_modul.shop_item(shop_items)            
         chosen = input('\n' 'Write the item name wich you want to buy or press "x" to countinu: ')
         if chosen == 'x':
             break
