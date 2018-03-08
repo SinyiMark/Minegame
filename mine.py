@@ -14,6 +14,34 @@ def game_start():
         pass
 
 
+def new_game():
+    you = {'name':'You', 'hp': 12, 'atk': 20, 'armor': 0, 'gold': 20, 'exp': 0 , 'maxhp': 12, 'level':1}
+    floor = 1
+    cleared_room_counter = 0
+    gameover = False
+    while gameover == False:
+        print_basic_ui(floor, you,  cleared_room_counter)
+        level_up(you)
+        enter_to_room(floor, you,  cleared_room_counter)
+        gameover = fight(you, floor, cleared_room_counter)
+        if gameover == True:
+            input()
+            os.system('cls') 
+            print(' You Die ')
+            input()
+            sys.exit(0)
+        else:
+            input('\n''Press "enter" to countinue or "s" to save')
+        cleared_room_counter = cleared_room_counter + 1
+        if cleared_room_counter % 3 == 0:
+            in_the_shop(you)
+            os.system('cls')
+            print_your_stat(you, 'full')
+            answer = input('If you want to go next floor write "go" : ')
+            if answer == 'go':
+                floor = floor + 1
+
+
 def print_your_stat(you, stat = ''):
     '''
         'you' is your hero dictonary
@@ -49,30 +77,38 @@ def print_shop_ui(you):
     print_your_stat(you, 'full')
 
 
-def print_shop_item(items):
+def print_shop_item(shop_items):
     ''' items is  a dictionary in a dictionary '''
-    for item_name,item_stat in items.items():
-        print('\n', item_name)
+    item_id = 0
+    for item_name,item_stat in shop_items.items():
+        item_id = item_id + 1
+        print('\n', 'Id: {} {}'.format(item_id, item_name))
         print(' +{} {} Price: {} gold'.format(item_stat['bonus'], item_stat['bonustype'], item_stat['price']))
-        
+        item_stat['id'] = item_id
+    return shop_items
+
 
 def enemy_generator(floor):  
     random_enemy = random.randint(1,10)
     if floor == 1:
-        slime_count = [1, 2, 3, 4]
+        slime_count = [1, 2, 3,]
         goblin_count = [5, 6, 7]
         skeleton_count = [8, 9, 10]
+        lvl2_goblin = [4]
         if random_enemy in slime_count:
             enemy = enemy_stat_generator('slime') 
         elif random_enemy in goblin_count:
             enemy = enemy_stat_generator('goblin') 
         elif random_enemy in skeleton_count:
              enemy = enemy_stat_generator('skeleton')
+        elif random_enemy in lvl2_goblin:
+                enemy = enemy_stat_generator('lvl2_goblin')    
     elif floor == 2:
         slime_count = [1, 2,]
-        goblin_count = [5, 6, 7]
+        goblin_count = [5, 6]
         skeleton_count = [8, 9, 10]
         ork_count =[3, 4]
+        lvl2_goblin = [7]
         if random_enemy in slime_count:
                 enemy = enemy_stat_generator('slime') 
         elif random_enemy in goblin_count:
@@ -81,18 +117,22 @@ def enemy_generator(floor):
             enemy = enemy_stat_generator('skeleton')
         elif random_enemy in ork_count:
             enemy = enemy_stat_generator('ork')
+        elif random_enemy in lvl2_goblin:
+            enemy = enemy_stat_generator('lvl2_goblin')    
     return enemy
 
 
 def enemy_stat_generator(enemy_name):
     if enemy_name == 'slime':
-        return {'hp': 3, 'atk': 1, 'armor': 0, 'gold': 1, 'exp':2, 'name':'slime'}
+        return {'hp': 3, 'atk': 1, 'armor': 0, 'gold': 2, 'exp':2, 'name':'slime'}
     elif enemy_name == 'goblin':
         return {'hp': 4, 'atk': 2, 'armor': 1, 'gold': 3, 'exp':5, 'name':'goblin'} 
     elif enemy_name == 'skeleton':
         return {'hp': 6, 'atk': 2, 'armor': 0, 'gold': 3, 'exp':5, 'name':'skeleton'}
     elif enemy_name == 'ork':
         return {'hp': 10, 'atk': 4, 'armor': 0, 'gold': 10, 'exp':15, 'name':'ork'}
+    elif enemy_name == 'lvl2_goblin':
+        return {'hp': 5, 'atk': 4, 'armor': 1, 'gold': 6, 'exp':7, 'name':'goblin [lvl 2]'} 
 
 
 def fight(you, floor, cleared_room):
@@ -209,56 +249,63 @@ def enter_to_room(floor, you, cleared_room_counter):
 
 
 def in_the_shop(you):
-    shop_items = {'Shield':{'bonustype':'armor', 'bonus':1, 'price':10}, 'THE LEGENDARY SWORD':{'bonustype':'atk', 'bonus':2, 'price':15}}
+    shop_items = get_shop_items()
     while True:
         in_shop_ind = False
         print_shop_ui(you)
-        print_shop_item(shop_items)            
+        shop_items = print_shop_item(shop_items)            
         chosen = input('\n' 'Write the item name wich you want to buy or press "x" to countinu: ')
         if chosen == 'x':
             break
-        elif chosen not in you:
-            for item_name,  item_stat in shop_items.items():
-                if item_name == chosen:
+        else:
+            try:
+                chosen = int(chosen)              
+            except:
+                input('Pless enter an existing id or "x" ')
+                continue
+            for item_name, item_stat in shop_items.items():
+                if chosen == item_stat['id'] and item_name == 'MAX Heal potion':
+                    you['hp'] == you['maxhp']
+                    in_shop_ind = True
+                    break
+                elif chosen == item_stat['id'] and item_name in you:
+                    input('{} is already in your inventory'.format(chosen))
+                elif item_stat['id'] == chosen:  
                     if item_stat['price'] <= you['gold']:
-                        you[item_name] = item_name
+                        if item_name != 'Heal potion':                           
+                            you[item_name] = item_name
                         you[item_stat['bonustype']] = you[item_stat['bonustype']] + item_stat['bonus']
                         you['gold'] = you['gold'] - item_stat['price']
                         in_shop_ind = True
                         break
                     else:
                         input('You dont have enougth gold ')
+                        in_shop_ind = True               
             if in_shop_ind == False:    
-                input('{} is not in shop'.format(chosen))
+                input('item with this id {} is not in shop'.format(chosen))
             else:
                 shop_items.pop(item_name, None)
-        else:
-            input('{} is already in your inventory'.format(chosen))
+            if you['hp'] > you['maxhp']:
+                you['hp'] > you['maxhp']
 
-def new_game():
-    you = {'name':'You', 'hp': 10, 'atk': 20, 'armor': 0, 'gold': 0, 'exp': 0 , 'maxhp': 10, 'level':1}
-    floor = 1
-    cleared_room_counter = 0
-    gameover = False
-    while gameover == False:
-        print_basic_ui(floor, you,  cleared_room_counter)
-        level_up(you)
-        enter_to_room(floor, you,  cleared_room_counter)
-        gameover = fight(you, floor, cleared_room_counter)
-        if gameover == True:
-            input()
-            os.system('cls') 
-            print(' You Die ')
-            input()
-            sys.exit(0)
-        else:
-            input('\n''Press "enter" to countine or "s" to save')
-        cleared_room_counter = cleared_room_counter + 1
-        if cleared_room_counter % 1 == 0:
-            in_the_shop(you)
-            os.system('cls')
-            print_your_stat(you, 'full')
-            answer = input('If you want to go next floor write "go" : ')
-            if answer == 'go':
-                floor = floor + 1
+
+def get_shop_items():
+    ''' 
+    creat a item list and return to in_the_shop fun
+    items is all possiable item
+    '''
+    items = {'Wooden shield':{'bonustype':'armor', 'bonus':1, 'price':10, 'id':0}, 
+            'THE LEGENDARY SWORD':{'bonustype':'atk', 'bonus':5, 'price':40, 'id':0}, 
+            'Helmet':{'bonustype':'maxhp', 'bonus':2, 'price':10, 'id':0}, 
+            'Chest':{'bonustype':'maxhp', 'bonus':3, 'price':15, 'id':0}, 
+            'Iron sword':{'bonustype':'atk', 'bonus':2, 'price':15, 'id':0}, 
+            'Iron shield':{'bonustype':'armor', 'bonus':2, 'price':20, 'id':0}
+            }
+    for i in range(2):
+        deleted_item = random.choice(list(items.keys()))
+        items.pop(deleted_item, None)
+    items['Heal potion'] = {'bonustype':'hp', 'bonus':5, 'price':10, 'id':0}
+    items['MAX Heal potion'] = {'bonustype':'hp', 'bonus':'restore full hp', 'price':20, 'id':0}
+    return items
+
 game_start()
